@@ -1,6 +1,6 @@
 {
     "name": "@proxima/nodejs-rocketmq-client",
-    "version": "0.1.3",
+    "version": "0.1.4",
     "cppSDKVersion": "2.1.0",
     "description": "RocketMQ Client for Node.js node version >= 14",
     "main": "index.js",
