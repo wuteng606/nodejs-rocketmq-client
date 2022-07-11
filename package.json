@@ -1,0 +1,28 @@
+{
+  "name": "nodejs_rocketmq_client",
+  "version": "0.1.0",
+  "cppSDKVersion": "2.1.0",
+  "description": "RocketMQ Client for Node.js node version >= 14",
+  "main": "index.js",
+  "private": true,
+  "dependencies": {
+    "bindings": "latest",
+    "co": "^4.6.0",
+    "destroy": "^1.2.0",
+    "getos": "^3.2.1",
+    "node-addon-api": "^5.0.0",
+    "urllib": "^2.38.1"
+  },
+  "cmake-js": {
+    "runtime": "node",
+    "runtimeVersion": "14.17.5",
+    "arch": "arm"
+  },
+  "scripts": {
+    "test": "node index.js",
+    "install": "node ./script/download_lib.js && cmake-js compile"
+  },
+  "peerDependencies": {
+    "cmake-js": "^6.3.2"
+  }
+}
