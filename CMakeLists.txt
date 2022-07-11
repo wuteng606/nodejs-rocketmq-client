@@ -1,7 +1,11 @@
 project(rocketmq)
 cmake_minimum_required(VERSION 3.20)
 set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_FLAGS "-std=c++11")
+set(CMAKE_C_COMPILER "gcc")
+set(CMAKE_CXX_COMPILER "g++")
 
+SET(CMAKE_C_COMPILER_WORKS TRUE)
 
 include_directories(${CMAKE_JS_INC})
 include_directories(deps/rocketmq/include)
@@ -57,3 +61,5 @@ endif ()
 #CMAKE_CXX_FLAGS
 # Define NAPI_VERSION
 add_definitions(-D NAPI_VERSION=6)
+
+# -DCMAKE_CXX_COMPILER=$(which g++) -DCMAKE_C_COMPILER=$(which gcc)

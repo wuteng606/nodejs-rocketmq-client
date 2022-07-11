@@ -35,7 +35,6 @@ const CPP_SDK_VERSION = pkg.cppSDKVersion;
 const LIB_DIR = path.join(__dirname, "..", "deps", "lib");
 const URL_ROOT = `${REGISTRY_MIRROR}cpp-client`;
 
-
 async function getUrlArray() {
     const platform = os.platform();
     const ret = [];
@@ -43,8 +42,12 @@ async function getUrlArray() {
 
     switch (platform) {
         case "win32":
-            ret.push(`${URL_ROOT}/windows/${CPP_SDK_VERSION}/rocketmq-client-cpp.dll`);
-            ret.push(`${URL_ROOT}/windows/${CPP_SDK_VERSION}/rocketmq-client-cpp.lib`);
+            ret.push(
+                `${URL_ROOT}/windows/${CPP_SDK_VERSION}/rocketmq-client-cpp.dll`
+            );
+            ret.push(
+                `${URL_ROOT}/windows/${CPP_SDK_VERSION}/rocketmq-client-cpp.lib`
+            );
             break;
 
         case "darwin":
@@ -54,7 +57,9 @@ async function getUrlArray() {
 
         case "linux":
             distro = await getLinuxDistroRoute();
-            ret.push(`${URL_ROOT}/linux/${CPP_SDK_VERSION}/${distro}/librocketmq.a`);
+            ret.push(
+                `${URL_ROOT}/linux/${CPP_SDK_VERSION}/${distro}/librocketmq.a`
+            );
             break;
 
         default:
@@ -65,16 +70,19 @@ async function getUrlArray() {
 }
 
 async function mkdir(dir) {
-    return new Promise((resolve, reject) => {
-        fs.stat(dir, (err, stats) => {
-            if (stats.isDirectory()) {
-                reject("已下载文件，无需重复下载")
-            } else {
-                fs.mkdirSync(dir);
-                resolve(true);
+    try {
+        const stat = await fs.promises.stat(dir);
+        if (stat.isDirectory()) {
+            const files = await fs.promises.readdir(dir);
+            if (files.length > 0) {
+                throw new Error("已下载文件，无需重复下载");
             }
-        })
-    })
+        } else {
+            await fs.promises.mkdir(dir);
+        }
+    } catch (error) {
+        await fs.promises.mkdir(dir);
+    }
 }
 
 async function main() {
@@ -82,7 +90,7 @@ async function main() {
     try {
         urls = await getUrlArray();
     } catch (e) {
-        console.log(e)
+        console.log(e);
         console.error(`[rocketmq sdk] [error] ${e.message}`);
         process.exit(4);
     }
@@ -100,25 +108,29 @@ async function main() {
         const resp = await urllib.request(url, {
             timeout: 60000 * 5,
             followRedirect: true,
-            streaming: true
+            streaming: true,
         });
 
         if (resp.status !== 200) {
             destroy(resp.res);
-            console.error(`[rocketmq sdk] [error] error status ${resp.status} while downloading [${url}].`);
+            console.error(
+                `[rocketmq sdk] [error] error status ${resp.status} while downloading [${url}].`
+            );
             process.exit(4);
         }
 
         const readStream = resp.res;
         const filename = path.join(LIB_DIR, path.basename(url));
         const writeStream = fs.createWriteStream(filename, {
-            encoding: "binary"
+            encoding: "binary",
         });
 
         // eslint-disable-next-line
         function handleDownladCallback(err) {
             if (err) {
-                console.error(`[rocketmq sdk] [error] error occurred while downloading [${url}] to [${filename}].`);
+                console.error(
+                    `[rocketmq sdk] [error] error occurred while downloading [${url}] to [${filename}].`
+                );
                 console.error(err.stack);
                 process.exit(4);
             }
@@ -128,7 +140,9 @@ async function main() {
 
             console.log(`[rocketmq sdk] [info] downloaded library [${url}].`);
             if (writeTimes === urls.length) {
-                console.log("[rocketmq sdk] [info] all libraries have been written to disk.");
+                console.log(
+                    "[rocketmq sdk] [info] all libraries have been written to disk."
+                );
                 process.exit(0);
             }
         }
