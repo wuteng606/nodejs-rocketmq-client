@@ -18,8 +18,6 @@ namespace __node_rocketmq__ {
 
         static int OnMessage(CPushConsumer *consumer_ptr, CMessageExt *msg_ext);
 
-        static std::string GetMessageColumn(char *name, CMessageExt *msg);
-
         RocketMQPushConsumer(const Napi::CallbackInfo &info);
 
         ~RocketMQPushConsumer();

@@ -3,7 +3,7 @@
 //
 
 #include "consumer_ack.h"
-
+#include <iostream>
 
 namespace __node_rocketmq__ {
 
@@ -31,12 +31,13 @@ namespace __node_rocketmq__ {
     }
 
     Napi::Value ConsumerAck::Done(const Napi::CallbackInfo &info) {
-        bool succ = true;
-        if (info.Length() >= 1) {
-            succ = (info[0].IsUndefined() || info[0].IsNull() || info[0].ToBoolean());
-        }
-        CConsumeStatus status = succ ? CConsumeStatus::E_CONSUME_SUCCESS : CConsumeStatus::E_RECONSUME_LATER;
-        this->Ack(status);
+        std::cout << "[sdk Done]" << std::endl;
+//        bool succ = true;
+//        if (info.Length() >= 1) {
+//            succ = (info[0].IsUndefined() || info[0].IsNull() || info[0].ToBoolean());
+//        }
+//        CConsumeStatus status = succ ? CConsumeStatus::E_CONSUME_SUCCESS : CConsumeStatus::E_RECONSUME_LATER;
+//        this->Ack(status);
     }
 
     void ConsumerAck::Ack(CConsumeStatus status) {

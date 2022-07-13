@@ -8,18 +8,9 @@
 #include <thread>
 
 namespace __node_rocketmq__ {
-using namespace std;
-//    struct MessageHandlerParam {
-//        RocketMQPushConsumer *consumer;
-//        ConsumerAckInner *ack;
-//        CMessageExt *msg;
-//    };
-//    char message_handler_param_keys[5][8] = {"topic", "tags", "keys", "body", "msgId"};
-
-    uv_mutex_t _get_msg_ext_column_lock;
+    using namespace std;
 
     map<CPushConsumer *, RocketMQPushConsumer *> _push_consumer_map;
-
 
     constexpr size_t ARRAY_LENGTH = 10;
     HandleMessageWorker *hmw;
@@ -37,15 +28,16 @@ using namespace std;
         RegisterMessageCallback(this->GetConsumer(), RocketMQPushConsumer::OnMessage);
         try {
             this->SetOptions(options);
-        } catch (const runtime_error e) {
+        }
+        catch (const runtime_error e) {
             Napi::TypeError::New(info.Env(), e.what()).ThrowAsJavaScriptException();
             return;
-        } catch (const std::exception &e) {
+        }
+        catch (const std::exception &e) {
             Napi::TypeError::New(info.Env(), e.what()).ThrowAsJavaScriptException();
             return;
         }
     }
-
 
     RocketMQPushConsumer::~RocketMQPushConsumer() {
         try {
@@ -70,7 +62,6 @@ using namespace std;
         if (_name_server_v.IsString()) {
             SetPushConsumerNameServerAddress(consumer_ptr, _name_server_v.ToString().Utf8Value().data());
         }
-
 
         // set thread count
         Napi::Value _thread_count_v = options.Get("threadCount");
@@ -150,10 +141,12 @@ using namespace std;
         try {
             ret = ::Subscribe(this->GetConsumer(), info[0].ToString().Utf8Value().data(),
                               info[1].ToString().Utf8Value().data());
-        } catch (const runtime_error e) {
+        }
+        catch (const runtime_error e) {
             Napi::Error::New(info.Env(), e.what()).ThrowAsJavaScriptException();
             return info.Env().Null();
-        } catch (const std::exception &e) {
+        }
+        catch (const std::exception &e) {
             Napi::Error::New(info.Env(), e.what()).ThrowAsJavaScriptException();
             return info.Env().Null();
         }
@@ -168,8 +161,11 @@ using namespace std;
             listener_func = info[0].As<Napi::Function>();
         }
         Napi::Function callback = info[0].As<Napi::Function>();
-        hmw = new HandleMessageWorker(callback);
-//        hmw->Queue();
+
+        ConsumerAck *ack = Napi::ObjectWrap<ConsumerAck>::Unwrap(info.This().ToObject());
+        std::cout << "[sdk] SetListener" << std::endl;
+        Napi::Object ackObject = ConsumerAck::NewInstance(info.Env(), info.This());
+        hmw = new HandleMessageWorker(callback, ack, ackObject);
     }
 
     Napi::Value RocketMQPushConsumer::SetSessionCredentials(const Napi::CallbackInfo &info) {
@@ -179,10 +175,12 @@ using namespace std;
         int ret;
         try {
             ret = SetPushConsumerSessionCredentials(this->GetConsumer(), access_key, secret_key, ons_channel);
-        } catch (const runtime_error e) {
+        }
+        catch (const runtime_error e) {
             Napi::Error::New(info.Env(), e.what()).ThrowAsJavaScriptException();
             return info.Env().Null();
-        } catch (const std::exception &e) {
+        }
+        catch (const std::exception &e) {
             Napi::Error::New(info.Env(), e.what()).ThrowAsJavaScriptException();
             return info.Env().Null();
         }
@@ -195,34 +193,8 @@ using namespace std;
 
     void RocketMQPushConsumer::HandleMessageInEventLoop(uv_async_t *async) {
         std::cout << "[sdk] HandleMessageInEventLoop 1" << std::endl;
-
-        MessageHandlerParam *param = (MessageHandlerParam *) (async->data);
-//        RocketMQPushConsumer *consumer = param->consumer;
-        ConsumerAckInner *ack_inner = param->ack;
-        CMessageExt *msg = param->msg;
-//        std::cout << "[sdk] HandleMessageInEventLoop 2" << std::endl;
-//        Napi::HandleScope scope(consumer->Env());
-//        Napi::Object ack_obj = ConsumerAck::NewInstance(consumer->Env(), Napi::Value());
-//        ConsumerAck *ack = Napi::ObjectWrap<ConsumerAck>::Unwrap(ack_obj);
-//        ack->SetInner(ack_inner);
-//        std::cout << "[sdk] HandleMessageInEventLoop 3" << std::endl;
-//        hmw->SetMessageParam(msg);
+        hmw->SetMessageParam(async);
         hmw->Queue();
-        // TODO: const char *GetMessageProperty(CMessageExt *msgExt, const char *key);
-//        for (int i = 0; i < 5; i++) {
-
-//            result.Set(message_handler_param_keys[i],
-//                        RocketMQPushConsumer::GetMessageColumn(message_handler_param_keys[i], msg));
-//        }
-
-//        std::cout << "[sdk] HandleMessageInEventLoop 4" << std::endl;
-//        HandleMessageWorker *hmw = new HandleMessageWorker();
-//        testData->nativeThread = std::thread(threadEntry, testData);
-//        Napi::Value argv[2] = {result.As<Napi::Value>(), {}};
-//        Napi::Function callback = consumer->GetListenFunction();
-//        std::cout << "[sdk] callback: " << callback.ToString() << std::endl;
-//        callback.Call(1, reinterpret_cast<napi_value const *>(GetMessageBody(msg)));
-
         uv_close((uv_handle_t *) async, close_async_done);
     }
 
@@ -254,41 +226,5 @@ using namespace std;
         CConsumeStatus status = ack_inner.WaitResult();
 
         return status;
-    }
-
-    string RocketMQPushConsumer::GetMessageColumn(char *name, CMessageExt *msg) {
-        const char *orig = NULL;
-
-        uv_mutex_lock(&_get_msg_ext_column_lock);
-        switch (name[0]) {
-            // topic / tags
-            case 't':
-                orig = name[1] == 'o' ? GetMessageTopic(msg) : GetMessageTags(msg);
-                break;
-
-                // keys
-            case 'k':
-                orig = GetMessageKeys(msg);
-                break;
-
-                // body
-            case 'b':
-                orig = GetMessageBody(msg);
-                break;
-
-                // msgId
-            case 'm':
-                orig = GetMessageId(msg);
-                break;
-
-            default:
-                orig = NULL;
-                break;
-        }
-
-        uv_mutex_unlock(&_get_msg_ext_column_lock);
-
-        if (!orig) return "";
-        return orig;
     }
 }

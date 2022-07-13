@@ -12,18 +12,11 @@ async function main() {
             {
                 nameServer,
             });
-        console.log("consumer", consumer);
         const end = consumer.subscribe("qa_tower_devops", "*");
-        // consumer.setListener((...args) => {
-        //     console.log("consumer setListener", ...args);
-        // })
-        console.log("consumer subscribe ", end);
         await consumer.start();
-        consumer.on("message", (...args) => {
-            console.log("on message", ...args);
-            // ack.done();
+        consumer.on("message", function () {
+            console.log(arguments);
         })
-        console.log("consumer", consumer);
 
     } catch (e) {
         console.log(e)
