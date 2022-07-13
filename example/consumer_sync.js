@@ -14,11 +14,14 @@ async function main() {
             });
         console.log("consumer", consumer);
         const end = consumer.subscribe("qa_tower_devops", "*");
+        // consumer.setListener((...args) => {
+        //     console.log("consumer setListener", ...args);
+        // })
         console.log("consumer subscribe ", end);
         await consumer.start();
-        consumer.on("message", (msg, ack) => {
-            console.log(msg);
-            ack.done();
+        consumer.on("message", (...args) => {
+            console.log("on message", ...args);
+            // ack.done();
         })
         console.log("consumer", consumer);
 

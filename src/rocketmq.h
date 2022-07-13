@@ -4,7 +4,6 @@
 
 #include "napi.h"
 #include "producer.h"
-#include "consumer_ack.h"
 #include "push_consumer.h"
 #include "string"
 #include "uv.h"

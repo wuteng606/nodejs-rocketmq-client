@@ -4,23 +4,25 @@
 
 #include "push_consumer.h"
 #include "map"
-#include "consumer_ack.h"
-#include "workers/push_consumer/start_or_shutdown.h"
 #include <iostream>
 #include <thread>
 
 namespace __node_rocketmq__ {
-
-    struct MessageHandlerParam {
-        RocketMQPushConsumer *consumer;
-        ConsumerAckInner *ack;
-        CMessageExt *msg;
-    };
-    char message_handler_param_keys[5][8] = {"topic", "tags", "keys", "body", "msgId"};
+using namespace std;
+//    struct MessageHandlerParam {
+//        RocketMQPushConsumer *consumer;
+//        ConsumerAckInner *ack;
+//        CMessageExt *msg;
+//    };
+//    char message_handler_param_keys[5][8] = {"topic", "tags", "keys", "body", "msgId"};
 
     uv_mutex_t _get_msg_ext_column_lock;
 
     map<CPushConsumer *, RocketMQPushConsumer *> _push_consumer_map;
+
+
+    constexpr size_t ARRAY_LENGTH = 10;
+    HandleMessageWorker *hmw;
 
     RocketMQPushConsumer::RocketMQPushConsumer(const Napi::CallbackInfo &info) : Napi::ObjectWrap<RocketMQPushConsumer>(
             info) {
@@ -165,6 +167,9 @@ namespace __node_rocketmq__ {
         if (info[0].IsFunction()) {
             listener_func = info[0].As<Napi::Function>();
         }
+        Napi::Function callback = info[0].As<Napi::Function>();
+        hmw = new HandleMessageWorker(callback);
+//        hmw->Queue();
     }
 
     Napi::Value RocketMQPushConsumer::SetSessionCredentials(const Napi::CallbackInfo &info) {
@@ -190,30 +195,33 @@ namespace __node_rocketmq__ {
 
     void RocketMQPushConsumer::HandleMessageInEventLoop(uv_async_t *async) {
         std::cout << "[sdk] HandleMessageInEventLoop 1" << std::endl;
+
         MessageHandlerParam *param = (MessageHandlerParam *) (async->data);
-        RocketMQPushConsumer *consumer = param->consumer;
+//        RocketMQPushConsumer *consumer = param->consumer;
         ConsumerAckInner *ack_inner = param->ack;
         CMessageExt *msg = param->msg;
-        std::cout << "[sdk] HandleMessageInEventLoop 2" << std::endl;
+//        std::cout << "[sdk] HandleMessageInEventLoop 2" << std::endl;
 //        Napi::HandleScope scope(consumer->Env());
 //        Napi::Object ack_obj = ConsumerAck::NewInstance(consumer->Env(), Napi::Value());
 //        ConsumerAck *ack = Napi::ObjectWrap<ConsumerAck>::Unwrap(ack_obj);
 //        ack->SetInner(ack_inner);
-        std::cout << "[sdk] HandleMessageInEventLoop 3" << std::endl;
-
+//        std::cout << "[sdk] HandleMessageInEventLoop 3" << std::endl;
+//        hmw->SetMessageParam(msg);
+        hmw->Queue();
         // TODO: const char *GetMessageProperty(CMessageExt *msgExt, const char *key);
-//        Napi::Object result = Napi::Object::New(NULL);
 //        for (int i = 0; i < 5; i++) {
+
 //            result.Set(message_handler_param_keys[i],
 //                        RocketMQPushConsumer::GetMessageColumn(message_handler_param_keys[i], msg));
 //        }
-        std::cout << "[sdk] HandleMessageInEventLoop 4" << std::endl;
 
+//        std::cout << "[sdk] HandleMessageInEventLoop 4" << std::endl;
+//        HandleMessageWorker *hmw = new HandleMessageWorker();
+//        testData->nativeThread = std::thread(threadEntry, testData);
 //        Napi::Value argv[2] = {result.As<Napi::Value>(), {}};
 //        Napi::Function callback = consumer->GetListenFunction();
 //        std::cout << "[sdk] callback: " << callback.ToString() << std::endl;
 //        callback.Call(1, reinterpret_cast<napi_value const *>(GetMessageBody(msg)));
-        std::cout << "[sdk] HandleMessageInEventLoop 5" << std::endl;
 
         uv_close((uv_handle_t *) async, close_async_done);
     }
@@ -231,7 +239,6 @@ namespace __node_rocketmq__ {
 
         // create async parameter
         MessageHandlerParam param;
-        param.consumer = consumer;
         param.ack = &ack_inner;
         param.msg = msg_ext;
 

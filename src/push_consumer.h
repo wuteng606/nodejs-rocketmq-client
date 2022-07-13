@@ -6,6 +6,9 @@
 #include <uv.h>
 #include <napi.h>
 #include <string>
+#include "handle_message.h"
+#include "workers/push_consumer/start_or_shutdown.h"
+
 
 namespace __node_rocketmq__ {
 
