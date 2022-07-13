@@ -16,12 +16,9 @@
  */
 "use strict";
 
-const co = require("co");
-
 const common = require("./common");
 const Producer = require("../").Producer;
-
-co(function *() {
+async function main() {
     const producer = new Producer("testGroup", {
         nameServer: common.nameServer,
         groupName: "testGroupName",
@@ -30,27 +27,27 @@ co(function *() {
         logLevel: "debug",
         compressLevel: 3,
         sendMessageTimeout: 5000,
-        maxMessageSize: 1024 * 256
+        maxMessageSize: 1024 * 256,
     });
 
     console.time("producer start");
     try {
-        yield producer.start();
-    } catch(e) {
+        await producer.start();
+    } catch (e) {
         console.error(e);
         process.exit(4);
     }
     console.timeEnd("producer start");
-    for(let i = 0; i < common.messageCount; i++) {
+    for (let i = 0; i < common.messageCount; i++) {
         console.time(`send ${i}`);
         try {
-            const ret = yield producer.send("test", `baz ${i}`, {
+            const ret = await producer.send("test", `baz ${i}`, {
                 keys: "foo",
-                tags: "bar"
+                tags: "bar",
             });
             console.timeEnd(`send ${i}`);
             console.log(ret);
-        } catch(e) {
+        } catch (e) {
             console.error(e);
             console.error(e.stack);
             process.exit(4);
@@ -58,6 +55,7 @@ co(function *() {
     }
 
     console.time("producer end");
-    yield producer.shutdown();
+    await producer.shutdown();
     console.timeEnd("producer end");
-});
+}
+main();

@@ -21,6 +21,12 @@ namespace __node_rocketmq__ {
 
         ~RocketMQPushConsumer();
 
+        Napi::Function* GetListenFunction(){
+            Napi::Function* cb;
+            cb = &listener_func;
+            return cb;
+        }
+
     private:
 //        Napi::Value New(const Napi::CallbackInfo &info);
         Napi::Value Start(const Napi::CallbackInfo &info);
@@ -40,12 +46,6 @@ namespace __node_rocketmq__ {
     protected:
         CPushConsumer* GetConsumer(){
             return consumer_ptr;
-        }
-
-        Napi::Function* GetListenFunction(){
-            Napi::Function* cb;
-            cb = &listener_func;
-            return cb;
         }
 
     private:

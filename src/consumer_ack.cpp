@@ -8,7 +8,6 @@
 namespace __node_rocketmq__ {
 
     ConsumerAck::ConsumerAck(const Napi::CallbackInfo &info) : Napi::ObjectWrap<ConsumerAck>(info) {
-        this->inner = NULL;
     }
 
     ConsumerAck::~ConsumerAck() noexcept {
@@ -46,5 +45,13 @@ namespace __node_rocketmq__ {
             this->inner = NULL;
         }
     }
+
+
+    Napi::Object ConsumerAck::NewInstance(Napi::Env env, Napi::Value arg) {
+        Napi::EscapableHandleScope scope(env);
+        Napi::Object obj = env.GetInstanceData<Napi::FunctionReference>()->New({arg});
+        return scope.Escape(napi_value(obj)).ToObject();
+    }
+
 
 }

@@ -16,6 +16,7 @@ This official Node.js client is a lightweight wrapper around  [rocketmq-client-c
 ## Installation
 
 ```shell
+$ apt-get install python make build-essential g++
 $ npm install --save nodejs-rocketmq-client
 ```
 

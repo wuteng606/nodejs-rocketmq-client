@@ -10,6 +10,7 @@ namespace __node_rocketmq__ {
     class ConsumerAck : public Napi::ObjectWrap<ConsumerAck> {
     public:
         static Napi::Object Init(Napi::Env env, Napi::Object exports);
+        static Napi::Object NewInstance(Napi::Env env, Napi::Value arg);
 
         ConsumerAck(const Napi::CallbackInfo &info);
 

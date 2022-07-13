@@ -6,7 +6,6 @@
     "main": "index.js",
     "dependencies": {
         "bindings": "latest",
-        "co": "^4.6.0",
         "destroy": "^1.2.0",
         "getos": "^3.2.1",
         "node-addon-api": "^5.0.0",

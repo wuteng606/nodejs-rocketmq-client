@@ -9,8 +9,8 @@ SET(CMAKE_C_COMPILER_WORKS TRUE)
 
 include_directories(${CMAKE_JS_INC})
 include_directories(deps/rocketmq/include)
-#include_directories(/Users/wuteng/Desktop/github/node/src)
-#include_directories(/Users/wuteng/Desktop/github/node/deps/uv/include)
+include_directories(/Users/wuteng/Desktop/github/node/src)
+include_directories(/Users/wuteng/Desktop/github/node/deps/uv/include)
 
 file(GLOB SOURCE_FILES "*.cc")
 add_library(${PROJECT_NAME}
@@ -29,7 +29,7 @@ add_library(${PROJECT_NAME}
         src/consumer_ack_inner.h
         src/workers/producer/send_message.h
         src/workers/producer/start_or_shutdown.h
-        src/workers/push_consumer/start_or_shutdown.h)
+        src/workers/push_consumer/start_or_shutdown.h main.c src/workers/push_consumer/handle_message.h)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "" SUFFIX ".node")
 target_link_libraries(${PROJECT_NAME} ${CMAKE_JS_LIB})

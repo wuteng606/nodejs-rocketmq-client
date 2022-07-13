@@ -52,7 +52,7 @@ async function getUrlArray() {
 
         case "darwin":
             ret.push(`${URL_ROOT}/mac/${CPP_SDK_VERSION}/librocketmq.dylib`);
-            ret.push(`${URL_ROOT}/mac/${CPP_SDK_VERSION}/librocketmq.a`);
+            // ret.push(`${URL_ROOT}/mac/${CPP_SDK_VERSION}/librocketmq.a`);
             break;
 
         case "linux":
