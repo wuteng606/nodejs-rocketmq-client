@@ -5,15 +5,26 @@
 #include "push_consumer.h"
 #include "map"
 #include <iostream>
-#include <thread>
+
 
 namespace __node_rocketmq__ {
     using namespace std;
 
     map<CPushConsumer *, RocketMQPushConsumer *> _push_consumer_map;
 
-    constexpr size_t ARRAY_LENGTH = 10;
     HandleMessageWorker *hmw;
+
+    struct MessageHandlerParam {
+        RocketMQPushConsumer *consumer;
+        ConsumerAckInner *ack;
+        CMessageExt *msg;
+    };
+
+    char message_handler_param_keys[5][8] = {"topic", "tags", "keys", "body", "msgId"};
+
+    uv_mutex_t _get_msg_ext_column_lock;
+    Napi::FunctionReference RocketMQPushConsumer::constructor;
+
 
     RocketMQPushConsumer::RocketMQPushConsumer(const Napi::CallbackInfo &info) : Napi::ObjectWrap<RocketMQPushConsumer>(
             info) {
@@ -115,9 +126,10 @@ namespace __node_rocketmq__ {
                 InstanceMethod("setSessionCredentials", &RocketMQPushConsumer::SetSessionCredentials),
         });
 
-        Napi::FunctionReference *constructor = new Napi::FunctionReference();
-        *constructor = Napi::Persistent(func);
-        env.SetInstanceData(constructor);
+//        Napi::FunctionReference *constructor = new Napi::FunctionReference();
+        constructor = Napi::Persistent(func);
+//        env.SetInstanceData(constructor);
+        constructor.SuppressDestruct();
         exports.Set("PushConsumer", func);
         return exports;
     }
@@ -154,18 +166,15 @@ namespace __node_rocketmq__ {
     }
 
     Napi::Value RocketMQPushConsumer::SetListener(const Napi::CallbackInfo &info) {
+        jsFnRef = Napi::Persistent(info[0].As<Napi::Function>());
         if (!listener_func.IsEmpty()) {
             Reset(listener_func);
         }
         if (info[0].IsFunction()) {
             listener_func = info[0].As<Napi::Function>();
         }
-        Napi::Function callback = info[0].As<Napi::Function>();
-
-        ConsumerAck *ack = Napi::ObjectWrap<ConsumerAck>::Unwrap(info.This().ToObject());
         std::cout << "[sdk] SetListener" << std::endl;
-        Napi::Object ackObject = ConsumerAck::NewInstance(info.Env(), info.This());
-        hmw = new HandleMessageWorker(callback, ack, ackObject);
+//        hmw = new HandleMessageWorker(this->GetListenFunction());
     }
 
     Napi::Value RocketMQPushConsumer::SetSessionCredentials(const Napi::CallbackInfo &info) {
@@ -187,14 +196,78 @@ namespace __node_rocketmq__ {
         return Napi::Number::New(info.Env(), ret);
     }
 
+
+    string RocketMQPushConsumer::GetMessageColumn(char *name, CMessageExt *msg) {
+        const char *orig = NULL;
+
+        uv_mutex_lock(&_get_msg_ext_column_lock);
+        switch (name[0]) {
+            // topic / tags
+            case 't':
+                orig = name[1] == 'o' ? GetMessageTopic(msg) : GetMessageTags(msg);
+                break;
+
+                // keys
+            case 'k':
+                orig = GetMessageKeys(msg);
+                break;
+
+                // body
+            case 'b':
+                orig = GetMessageBody(msg);
+                break;
+
+                // msgId
+            case 'm':
+                orig = GetMessageId(msg);
+                break;
+
+            default:
+                orig = NULL;
+                break;
+        }
+
+        uv_mutex_unlock(&_get_msg_ext_column_lock);
+
+        if (!orig) return "";
+        return orig;
+    }
+
     void close_async_done(uv_handle_t *handle) {
         free(handle);
     }
 
+    void RocketMQPushConsumer::Test(Napi::Env env, ConsumerAckInner *ack_inner, CMessageExt *msg) {
+        Napi::HandleScope scope(env);
+        Napi::Object ack_obj = ConsumerAck::NewInstance();
+        std::cout << "[RocketMQPushConsumer Test] 1" << std::endl;
+        ConsumerAck *ack = Napi::ObjectWrap<ConsumerAck>::Unwrap(ack_obj);
+        Napi::Object result = Napi::Object::New(env);
+        for (int i = 0; i < 5; i++) {
+            result.Set(Napi::String::New(Env(), message_handler_param_keys[i]),
+                       Napi::String::New(Env(), HandleMessageWorker::GetMessageColumn(message_handler_param_keys[i],
+                                                                                      msg)));
+        }
+        std::cout << "[RocketMQPushConsumer Test] 2" << std::endl;
+        ack->SetInner(ack_inner);
+        jsFnRef.Call({env.Undefined(), result, ack_obj});
+
+//        hmw = new HandleMessageWorker(jsFn);
+
+//        jsFnRef.Call({env.Undefined(), result, ack_obj});
+//        this->GetListenFunction().Call({env.Undefined(), result, ack_obj});
+    }
+
     void RocketMQPushConsumer::HandleMessageInEventLoop(uv_async_t *async) {
         std::cout << "[sdk] HandleMessageInEventLoop 1" << std::endl;
-        hmw->SetMessageParam(async);
-        hmw->Queue();
+        MessageHandlerParam *param = (MessageHandlerParam *) (async->data);
+        RocketMQPushConsumer *consumer = param->consumer;
+        ConsumerAckInner *ack_inner = param->ack;
+        CMessageExt *msg = param->msg;
+        consumer->Test(consumer->Env(), ack_inner, msg);
+//        consumer->GetListenFunction().Call({consumer->Env().Undefined()});
+//        hmw->SetMessageParam(ack_inner, msg);
+//        hmw->Queue();
         uv_close((uv_handle_t *) async, close_async_done);
     }
 
@@ -211,6 +284,7 @@ namespace __node_rocketmq__ {
 
         // create async parameter
         MessageHandlerParam param;
+        param.consumer = consumer;
         param.ack = &ack_inner;
         param.msg = msg_ext;
 
@@ -224,7 +298,7 @@ namespace __node_rocketmq__ {
 
         // wait for result
         CConsumeStatus status = ack_inner.WaitResult();
-
+        std::cout << "[sdk] CConsumeStatus status" << status << std::endl;
         return status;
     }
 }

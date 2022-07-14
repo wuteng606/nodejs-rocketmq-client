@@ -2,18 +2,17 @@
 
 namespace __node_rocketmq__ {
 
-    uv_mutex_t _get_msg_ext_column_lock;
+//    uv_mutex_t _get_msg_ext_column_lock;
 
-    void HandleMessageWorker::SetMessageParam(uv_async_t *async) {
-        MessageHandlerParam *param = (MessageHandlerParam *) (async->data);
-        ConsumerAckInner *ack_inner = param->ack;
-        CMessageExt *msg = param->msg;
+    void HandleMessageWorker::SetMessageParam(ConsumerAckInner *ack_inner, CMessageExt *msg) {
         std::cout << "[sdk] SetMessageParam :" << GetMessageBody(msg) << std::endl;
-        this->ack->SetInner(ack_inner);
+        this->ack_inner = ack_inner;
+        std::cout << "[sdk] Set ack_inner" << std::endl;
         this->msg = msg;
     }
 
     string HandleMessageWorker::GetMessageColumn(char *name, CMessageExt *msg) {
+
         const char *orig = NULL;
 
 //        uv_mutex_lock(&_get_msg_ext_column_lock);

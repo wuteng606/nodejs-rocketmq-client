@@ -13,21 +13,18 @@
 using namespace std;
 namespace __node_rocketmq__ {
 
-    struct MessageHandlerParam {
-        ConsumerAckInner *ack;
-        CMessageExt *msg;
-    };
+
 
     class HandleMessageWorker : public Napi::AsyncWorker {
     public:
-        HandleMessageWorker(Napi::Function &callback, ConsumerAck *ack, Napi::Object ackObject) : AsyncWorker(callback), ack(ack), ackObject(ackObject) {
+        HandleMessageWorker(Napi::Function &callback) : AsyncWorker(callback) {
         }
 
         ~HandleMessageWorker() {}
 
         static string GetMessageColumn(char *name, CMessageExt *msg);
 
-        void SetMessageParam(uv_async_t *async);
+        void SetMessageParam(ConsumerAckInner *ack_inner, CMessageExt *msg);
 
         void SetCount(int count) {
             std::cout << "[sdk] SetCount :" << count << std::endl;
@@ -38,25 +35,27 @@ namespace __node_rocketmq__ {
         }
 
         void OnOK() {
-            char message_handler_param_keys[5][8] = {"topic", "tags", "keys", "body", "msgId"};
-
-            std::cout << "[sdk] HandleMessageWorker OnOK abc" << HandleMessageWorker::GetMessageColumn(message_handler_param_keys[0],
-                                                                                                       this->msg) << std::endl;
-            Napi::Object result = Napi::Object::New(Env());
-            for (int i = 0; i < 5; i++) {
-                result.Set(Napi::String::New(Env(), message_handler_param_keys[i]),
-                           Napi::String::New(Env(), HandleMessageWorker::GetMessageColumn(message_handler_param_keys[i],
-                                                                                          this->msg)));
-            }
-            Callback().Call({Env().Undefined(), result, ackObject});
-//            Callback().Call(reinterpret_cast<napi_value>(2), {
-//                    result,
-//                    reinterpret_cast<Napi::Value &&>(ack)});
+            std::cout << "[sdk] OnOK" << std::endl;
+//            char message_handler_param_keys[5][8] = {"topic", "tags", "keys", "body", "msgId"};
+//
+//            std::cout << "[sdk] HandleMessageWorker OnOK abc :"
+//                      << HandleMessageWorker::GetMessageColumn(message_handler_param_keys[0],
+//                                                               this->msg) << std::endl;
+//            Napi::Object result = Napi::Object::New(Env());
+//            for (int i = 0; i < 5; i++) {
+//                result.Set(Napi::String::New(Env(), message_handler_param_keys[i]),
+//                           Napi::String::New(Env(), HandleMessageWorker::GetMessageColumn(message_handler_param_keys[i],
+//                                                                                          this->msg)));
+//            }
+//            ack = ConsumerAck::NewInstance();
+//            ConsumerAck *tempAck = Napi::ObjectWrap<ConsumerAck>::Unwrap(ack);
+//            tempAck->SetInner(this->ack_inner);
+//            Callback().Call({Env().Undefined(), result, ack});
         }
 
     private:
-        Napi::Object ackObject;
-        ConsumerAck *ack;
+        Napi::Object ack;
+        ConsumerAckInner *ack_inner;
         CMessageExt *msg;
     };
 

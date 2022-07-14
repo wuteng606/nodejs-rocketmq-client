@@ -6,8 +6,8 @@
 #include <uv.h>
 #include <napi.h>
 #include <string>
-#include "handle_message.h"
 #include "workers/push_consumer/start_or_shutdown.h"
+#include "handle_message.h"
 
 
 namespace __node_rocketmq__ {
@@ -18,18 +18,21 @@ namespace __node_rocketmq__ {
 
         static int OnMessage(CPushConsumer *consumer_ptr, CMessageExt *msg_ext);
 
+        static std::string GetMessageColumn(char *name, CMessageExt *msg);
+
         RocketMQPushConsumer(const Napi::CallbackInfo &info);
 
         ~RocketMQPushConsumer();
 
-        Napi::Function* GetListenFunction(){
-            Napi::Function* cb;
-            cb = &listener_func;
+        Napi::Function &GetListenFunction() {
+            Napi::Function &cb = listener_func;
             return cb;
         }
 
     private:
-//        Napi::Value New(const Napi::CallbackInfo &info);
+        static Napi::FunctionReference constructor;
+
+        //        Napi::Value New(const Napi::CallbackInfo &info);
         Napi::Value Start(const Napi::CallbackInfo &info);
 
         Napi::Value Shutdown(const Napi::CallbackInfo &info);
@@ -42,18 +45,22 @@ namespace __node_rocketmq__ {
 
         void SetOptions(Napi::Object options);
 
-        static void HandleMessageInEventLoop(uv_async_t* async);
+        void Test(Napi::Env env, ConsumerAckInner *ack_inner, CMessageExt *msg);
+
+        static void HandleMessageInEventLoop(uv_async_t *async);
+
 
     protected:
-        CPushConsumer* GetConsumer(){
+        CPushConsumer *GetConsumer() {
             return consumer_ptr;
         }
 
     private:
-        CPushConsumer* consumer_ptr;
+        CPushConsumer *consumer_ptr;
         Napi::Function listener_func;
-    };
+        Napi::FunctionReference jsFnRef;
 
+    };
 
 }
 

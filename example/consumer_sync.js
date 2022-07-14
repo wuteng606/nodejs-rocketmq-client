@@ -15,8 +15,11 @@ async function main() {
         const end = consumer.subscribe("qa_tower_devops", "*");
         await consumer.start();
         consumer.on("message", function () {
-            console.log(arguments);
+            console.log("message", arguments);
+            let obj = arguments[2];
+            obj.done();
         })
+
 
     } catch (e) {
         console.log(e)

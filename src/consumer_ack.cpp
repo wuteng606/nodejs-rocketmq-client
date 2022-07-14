@@ -7,7 +7,10 @@
 
 namespace __node_rocketmq__ {
 
-    ConsumerAck::ConsumerAck(const Napi::CallbackInfo &info) : Napi::ObjectWrap<ConsumerAck>(info) {
+    Napi::FunctionReference ConsumerAck::constructor;
+
+    ConsumerAck::ConsumerAck(const Napi::CallbackInfo &info)
+            : Napi::ObjectWrap<ConsumerAck>(info) {
     }
 
     ConsumerAck::~ConsumerAck() noexcept {
@@ -22,25 +25,24 @@ namespace __node_rocketmq__ {
                         InstanceMethod("done", &ConsumerAck::Done)
                 }
         );
-
-        Napi::FunctionReference *constructor = new Napi::FunctionReference();
-        *constructor = Napi::Persistent(func);
-        env.SetInstanceData(constructor);
+        constructor = Napi::Persistent(func);
+        constructor.SuppressDestruct();
         exports.Set("ConsumerAck", func);
         return exports;
     }
 
     Napi::Value ConsumerAck::Done(const Napi::CallbackInfo &info) {
         std::cout << "[sdk Done]" << std::endl;
-//        bool succ = true;
-//        if (info.Length() >= 1) {
-//            succ = (info[0].IsUndefined() || info[0].IsNull() || info[0].ToBoolean());
-//        }
-//        CConsumeStatus status = succ ? CConsumeStatus::E_CONSUME_SUCCESS : CConsumeStatus::E_RECONSUME_LATER;
-//        this->Ack(status);
+        bool succ = true;
+        if (info.Length() >= 1) {
+            succ = (info[0].IsUndefined() || info[0].IsNull() || info[0].ToBoolean());
+        }
+        CConsumeStatus status = succ ? CConsumeStatus::E_CONSUME_SUCCESS : CConsumeStatus::E_RECONSUME_LATER;
+        this->Ack(status);
     }
 
     void ConsumerAck::Ack(CConsumeStatus status) {
+        std::cout << "[sdk] Ack :" << !!this->inner << std::endl;
         if (this->inner) {
             this->inner->Ack(status);
             this->inner = NULL;
@@ -48,10 +50,9 @@ namespace __node_rocketmq__ {
     }
 
 
-    Napi::Object ConsumerAck::NewInstance(Napi::Env env, Napi::Value arg) {
-        Napi::EscapableHandleScope scope(env);
-        Napi::Object obj = env.GetInstanceData<Napi::FunctionReference>()->New({arg});
-        return scope.Escape(napi_value(obj)).ToObject();
+    Napi::Object ConsumerAck::NewInstance() {
+        Napi::Object obj = constructor.New({});
+        return obj;
     }
 
 
