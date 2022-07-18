@@ -32,7 +32,6 @@ namespace __node_rocketmq__ {
     }
 
     Napi::Value ConsumerAck::Done(const Napi::CallbackInfo &info) {
-        std::cout << "[sdk Done]" << std::endl;
         bool succ = true;
         if (info.Length() >= 1) {
             succ = (info[0].IsUndefined() || info[0].IsNull() || info[0].ToBoolean());
@@ -42,7 +41,6 @@ namespace __node_rocketmq__ {
     }
 
     void ConsumerAck::Ack(CConsumeStatus status) {
-        std::cout << "[sdk] Ack :" << !!this->inner << std::endl;
         if (this->inner) {
             this->inner->Ack(status);
             this->inner = NULL;

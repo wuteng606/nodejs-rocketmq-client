@@ -30,8 +30,7 @@ add_library(${PROJECT_NAME}
         src/workers/producer/send_message.h
         src/workers/producer/start_or_shutdown.h
         src/workers/push_consumer/start_or_shutdown.h
-        src/handle_message.h
-        src/handle_message.cpp)
+        )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "" SUFFIX ".node")
 target_link_libraries(${PROJECT_NAME} ${CMAKE_JS_LIB})

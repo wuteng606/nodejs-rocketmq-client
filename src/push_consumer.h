@@ -7,7 +7,9 @@
 #include <napi.h>
 #include <string>
 #include "workers/push_consumer/start_or_shutdown.h"
+#include "consumer_ack.h"
 #include "handle_message.h"
+
 
 
 namespace __node_rocketmq__ {
@@ -45,10 +47,9 @@ namespace __node_rocketmq__ {
 
         void SetOptions(Napi::Object options);
 
-        void Test(Napi::Env env, ConsumerAckInner *ack_inner, CMessageExt *msg);
+        void CallbackMsg(Napi::Env env, ConsumerAckInner *ack_inner, CMessageExt *msg);
 
-        static void HandleMessageInEventLoop(uv_async_t *async);
-
+        static void HandleMessageInEventLoop(uv_async_t* async);
 
     protected:
         CPushConsumer *GetConsumer() {

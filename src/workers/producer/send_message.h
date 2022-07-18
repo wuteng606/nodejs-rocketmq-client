@@ -51,8 +51,6 @@ namespace __node_rocketmq__ {
         }
 
         void OnOK() {
-            std::cout << "offset:" << send_ret.offset << "\nsendStatus:" << send_ret.sendStatus << "\noffset:"
-                      << send_ret.offset << std::endl;
             Callback().Call({
                                     Env().Undefined(),
                                     Napi::Number::New(Env(), (unsigned int) send_ret.sendStatus),

@@ -46,6 +46,9 @@ namespace __node_rocketmq__ {
 
         Napi::Value SetSessionCredentials(const Napi::CallbackInfo &info);
 
+
+        static Napi::FunctionReference constructor;
+
     private:
         void SetOptions(Napi::Object options);
 

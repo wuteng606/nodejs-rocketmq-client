@@ -32,6 +32,7 @@ using namespace std;
 
 namespace __node_rocketmq__ {
 
+    static Napi::FunctionReference constructor;
 
     RocketMQProducer::RocketMQProducer(const Napi::CallbackInfo &info) : Napi::ObjectWrap<RocketMQProducer>(info) {
 

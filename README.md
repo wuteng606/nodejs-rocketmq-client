@@ -1,13 +1,27 @@
 # RocketMQ Client for Node.js
 
-[![Version](http://img.shields.io/npm/v/apache-rocketmq.svg)](https://www.npmjs.com/package/apache-rocketmq)
-[![Downloads](http://img.shields.io/npm/dm/apache-rocketmq.svg)](https://www.npmjs.com/package/apache-rocketmq)
-[![License](https://img.shields.io/npm/l/apache-rocketmq.svg?style=flat)](https://opensource.org/licenses/https://opensource.org/licenses/Apache-2.0)
-[![TravisCI](https://travis-ci.org/apache/rocketmq-client-nodejs.svg)](https://travis-ci.org/apache/rocketmq-client-nodejs)
-[![Dependency](https://david-dm.org/apache/rocketmq-client-nodejs.svg)](https://david-dm.org/apache/rocketmq-client-nodejs)
-
 This official Node.js client is a lightweight wrapper around  [rocketmq-client-cpp](https://github.com/apache/rocketmq-client-cpp), a finely tuned CPP client.
 
+### 下面是中文文档
+
+1. 因为是基于 `rocketmq-client-cpp` 做的node扩展，所以默认是下载 ali oss 对应 `package.json 中 cppSDKVersion` 版本的 `.so .a .dylib` 暂不支持 windows 如果需要，自行下载`rocketmq-client-cpp` 编译windows版本，
+2. 下载地址 [rocketmq-client-cpp release](https://github.com/apache/rocketmq-client-cpp/releases) 下载好之后，放到 阿里云oss地址，或其他地址（默认会去阿里oss下载，但大多数情况会失败，所以我是上传到了自己的oss，如果需要，还是要自己上传到自己的oss ）：
+```
+let REGISTRY_MIRROR =
+    process.env.NODE_ROCKETMQ_REGISTRY ||
+    "https://opensource-rocketmq-client.oss-cn-hangzhou.aliyuncs.com";
+
+// linux
+    // 中间的 UBUNTU/14.04 要根据自身情况决定，如果是 centos 相同道理，如有不清楚，请查看源码中 download_lib.js 文件，
+    ${REGISTRY_MIRROR}/cpp-client/linux/2.1.0/UBUNTU/14.04/librocketmq.a
+// darwin
+    ${REGISTRY_MIRROR}/cpp-client/mac/2.1.0/librocketmq.dylib
+```
+
+3. 本地需要安装构建相关东西 `apt-get install python make build-essential g++` 可能有差异，需根据自身情况，自行解决
+
+4. 安装过程如果有编译错误问题，可联系 `wuteng606@163.com` 如果有问题，欢迎各位大佬指正
+5. 源码 example 目录有用例
 
 > **Notice 1:** This client is still in `dev` version. Use it cautiously in production.
 
@@ -156,7 +170,7 @@ producer.send("test", `baz ${i}`, {
 ##### send `status` and `statusStr`
 
 | `status` | `statusStr`           |
-|----------|-----------------------|
+| -------- | --------------------- |
 | `0`      | `OK`                  |
 | `1`      | `FLUSH_DISK_TIMEOUT`  |
 | `2`      | `FLUSH_SLAVE_TIMEOUT` |
