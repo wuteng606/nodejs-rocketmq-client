@@ -1,9 +1,13 @@
 {
-    "name": "@proxima/nodejs-rocketmq-client",
-    "version": "0.2.0",
+    "name": "nodejs-rocketmq-client",
+    "version": "1.0.0",
     "cppSDKVersion": "2.1.0",
     "description": "RocketMQ Client for Node.js node version >= 14",
     "main": "index.js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/wuteng606/nodejs-rocketmq-client.git"
+    },
     "dependencies": {
         "bindings": "latest",
         "destroy": "^1.2.0",

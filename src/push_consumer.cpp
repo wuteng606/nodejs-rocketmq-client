@@ -21,6 +21,8 @@ namespace __node_rocketmq__
 
     char message_handler_param_keys[5][8] = {"topic", "tags", "keys", "body", "msgId"};
 
+    uv_mutex_t _get_msg_ext_column_lock;
+
     Napi::FunctionReference RocketMQPushConsumer::constructor;
 
     RocketMQPushConsumer::RocketMQPushConsumer(const Napi::CallbackInfo &info) : Napi::ObjectWrap<RocketMQPushConsumer>(
@@ -134,6 +136,8 @@ namespace __node_rocketmq__
 
     Napi::Object RocketMQPushConsumer::Init(Napi::Env env, Napi::Object exports)
     {
+        uv_mutex_init(&_get_msg_ext_column_lock);
+
         Napi::Function func = DefineClass(env, "RocketMQPushConsumer", {
                                                                            InstanceMethod("start", &RocketMQPushConsumer::Start),
                                                                            InstanceMethod("shutdown", &RocketMQPushConsumer::Shutdown),
@@ -237,7 +241,7 @@ namespace __node_rocketmq__
         for (int i = 0; i < 5; i++)
         {
             result.Set(Napi::String::New(Env(), message_handler_param_keys[i]),
-                       Napi::String::New(Env(), HandleMessage::GetMessageColumn(message_handler_param_keys[i],
+                       Napi::String::New(Env(), RocketMQPushConsumer::GetMessageColumn(message_handler_param_keys[i],
                                                                                        msg)));
         }
         ack->SetInner(ack_inner);
@@ -282,5 +286,43 @@ namespace __node_rocketmq__
         // wait for result
         CConsumeStatus status = ack_inner.WaitResult();
         return status;
+    }
+
+    string RocketMQPushConsumer::GetMessageColumn(char* name, CMessageExt* msg)
+    {
+        const char* orig = NULL;
+
+        uv_mutex_lock(&_get_msg_ext_column_lock);
+        switch(name[0])
+        {
+            // topic / tags
+            case 't':
+                orig = name[1] == 'o' ? GetMessageTopic(msg) : GetMessageTags(msg);
+                break;
+
+                // keys
+            case 'k':
+                orig = GetMessageKeys(msg);
+                break;
+
+                // body
+            case 'b':
+                orig = GetMessageBody(msg);
+                break;
+
+                // msgId
+            case 'm':
+                orig = GetMessageId(msg);
+                break;
+
+            default:
+                orig = NULL;
+                break;
+        }
+
+        uv_mutex_unlock(&_get_msg_ext_column_lock);
+
+        if(!orig) return "";
+        return orig;
     }
 }

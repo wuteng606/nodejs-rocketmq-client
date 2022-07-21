@@ -8,8 +8,7 @@
         "src/producer.cpp",
         "src/push_consumer.cpp",
         "src/consumer_ack.cpp",
-        "src/consumer_ack_inner.cpp",
-        "src/handle_message.cpp"
+        "src/consumer_ack_inner.cpp"
       ],
       "include_dirs": [
         "/Users/wuteng/Desktop/github/node/src",
